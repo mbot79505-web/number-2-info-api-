@@ -128,7 +128,6 @@ app.get('/MAHA88/check', (req, res) => {
     });
 });
 
-// ---------- MAIN API (WITHOUT OWNER/TAG) ----------
 app.get('/api/info', async (req, res) => {
     const number = req.query.number;
     const key = req.query.key;
@@ -167,8 +166,6 @@ app.get('/api/info', async (req, res) => {
         });
 
         let records = [];
-        
-        // Extract records from original API
         if (response.data?.result?.result?.result) {
             records = response.data.result.result.result;
         } else if (response.data?.result?.result) {
@@ -179,28 +176,25 @@ app.get('/api/info', async (req, res) => {
             records = [];
         }
 
-        // Ensure array
         if (!Array.isArray(records)) {
             records = [records];
         }
 
-        // ---------- FILTER: Remove entries with "status":"failed" ----------
+        // ---------- FILTER: Remove "failed" status ----------
         const filteredRecords = records.filter(record => 
             record.status !== 'failed' && record.status !== 'error'
         );
 
-        // ---------- REMOVE owner/tag fields from each record ----------
+        // ---------- REMOVE tag, owner, status fields ----------
         const cleanedRecords = filteredRecords.map(record => {
             const { tag, owner, credit, status, ...cleanRecord } = record;
             return cleanRecord;
         });
 
-        const cleanData = {
+        res.json({
             total: cleanedRecords.length,
             result: cleanedRecords
-        };
-
-        res.json(cleanData);
+        });
 
     } catch (error) {
         res.status(500).json({
