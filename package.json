@@ -1,0 +1,13 @@
+{
+  "name": "numbar-info-api",
+  "version": "1.0.0",
+  "description": "Number info API with key system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
+  }
+}
