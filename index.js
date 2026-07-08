@@ -1,12 +1,10 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const PORT = 8080; // Fixed port 8080
+const PORT = 8080;
 
-// ---------- STORAGE ----------
 const users = {};
 
-// ---------- HELPER: Generate Key ----------
 function generateKey() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let key = '';
@@ -16,7 +14,6 @@ function generateKey() {
     return key;
 }
 
-// ---------- ROOT (Hidden) ----------
 app.get('/', (req, res) => {
     res.json({
         status: "Numbar info api is running ✅",
@@ -27,7 +24,6 @@ app.get('/', (req, res) => {
     });
 });
 
-// ---------- CREATE KEY (Hidden) ----------
 app.get('/MAHA88/new', (req, res) => {
     const customKey = req.query.key;
     const days = parseInt(req.query.day) || 7;
@@ -66,7 +62,6 @@ app.get('/MAHA88/new', (req, res) => {
     });
 });
 
-// ---------- DELETE KEY (Hidden) ----------
 app.get('/MAHA88/delete', (req, res) => {
     const key = req.query.key;
 
@@ -92,7 +87,6 @@ app.get('/MAHA88/delete', (req, res) => {
     });
 });
 
-// ---------- CHECK KEY (Hidden) ----------
 app.get('/MAHA88/check', (req, res) => {
     const key = req.query.key;
 
@@ -134,7 +128,7 @@ app.get('/MAHA88/check', (req, res) => {
     });
 });
 
-// ---------- MAIN API ----------
+// ---------- MAIN API (WITHOUT OWNER/TAG) ----------
 app.get('/api/info', async (req, res) => {
     const number = req.query.number;
     const key = req.query.key;
@@ -173,6 +167,8 @@ app.get('/api/info', async (req, res) => {
         });
 
         let records = [];
+        
+        // Extract records from original API
         if (response.data?.result?.result?.result) {
             records = response.data.result.result.result;
         } else if (response.data?.result?.result) {
@@ -183,13 +179,25 @@ app.get('/api/info', async (req, res) => {
             records = [];
         }
 
+        // Ensure array
         if (!Array.isArray(records)) {
             records = [records];
         }
 
+        // ---------- FILTER: Remove entries with "status":"failed" ----------
+        const filteredRecords = records.filter(record => 
+            record.status !== 'failed' && record.status !== 'error'
+        );
+
+        // ---------- REMOVE owner/tag fields from each record ----------
+        const cleanedRecords = filteredRecords.map(record => {
+            const { tag, owner, credit, status, ...cleanRecord } = record;
+            return cleanRecord;
+        });
+
         const cleanData = {
-            total: records.length,
-            result: records
+            total: cleanedRecords.length,
+            result: cleanedRecords
         };
 
         res.json(cleanData);
@@ -202,7 +210,6 @@ app.get('/api/info', async (req, res) => {
     }
 });
 
-// ---------- START ----------
 app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`📋 Active keys: ${Object.keys(users).length}`);
